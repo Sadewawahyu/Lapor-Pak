@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map</title>
+
+  <!-- LEAFLET CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .popup-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+    .popup-sub {
+      font-size: 13px;
+      color: #555;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDfY4qyOfZ9ay3SVsB97IevixHYQrDsLtw",
+      authDomain: "laporpak-74868.firebaseapp.com",
+      projectId: "laporpak-74868",
+      storageBucket: "laporpak-74868.firebasestorage.app",
+      messagingSenderId: "670479597646",
+      appId: "1:670479597646:web:1a1e836e2cddfe4378831f",
+      measurementId: "G-0BTYW6ND28",
+      databaseURL: "https://laporpak-74868-default-rtdb.firebaseio.com/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.onload = function () {
+      // Map dengan zoom control normal
+      const map = L.map("map", {
+        zoomControl: true
+      }).setView([-7.7956, 110.3695], 13);
+
+      // Tile Layer
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19
+      }).addTo(map);
+
+      // Load marker dari database
+      const laporanRef = ref(db, "laporan");
+
+      onValue(laporanRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        Object.values(data).forEach((lap) => {
+          if (!lap.latitude || !lap.longitude) return;
+
+          const marker = L.marker([lap.latitude, lap.longitude]).addTo(map);
+
+          // Popup TANPA GAMBAR
+          const popupHTML = `
+            <div class="popup-title">${lap.judul || "Tanpa Judul"}</div>
+            <div class="popup-sub">${lap.jenis || "-"}</div>
+          `;
+
+          marker.bindPopup(popupHTML);
+        });
+      });
+    };
+  </script>
+</head>
+
+<body>
+  <div id="map"></div>
+</body>
+</html>

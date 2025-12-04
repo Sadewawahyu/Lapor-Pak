@@ -1,98 +1,232 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/(tabs)/index.tsx
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  Dimensions,
+  ScrollView,
+} from "react-native";
+import { router } from "expo-router";
+import { WebView } from "react-native-webview";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { initializeApp, getApps } from "firebase/app";
+import { getDatabase, ref, onValue } from "firebase/database";
+
+const { width } = Dimensions.get("window");
+const cardWidth = width * 0.72;
+const cardSpacing = 16;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDfY4qyOfZ9ay3SVsB97IevixHYQrDsLtw",
+  authDomain: "laporpak-74868.firebaseapp.com",
+  projectId: "laporpak-74868",
+  storageBucket: "laporpak-74868.firebasestorage.app",
+  messagingSenderId: "670479597646",
+  appId: "1:670479597646:web:1a1e836e2cddfe4378831f",
+  measurementId: "G-0BTYW6ND28",
+  databaseURL: "https://laporpak-74868-default-rtdb.firebaseio.com/",
+};
+
+if (!getApps().length) initializeApp(firebaseConfig);
+const db = getDatabase();
+
+function getStatusColor(status?: string) {
+  if (!status) return "#999";
+  const s = String(status).toLowerCase();
+  if (s === "baru") return "#FF4C4C";
+  if (s === "proses") return "#FFA500";
+  if (s === "selesai") return "#28A745";
+  return "#999";
+}
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [laporan, setLaporan] = useState<any[]>([]);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    const laporanRef = ref(db, "laporan");
+
+    const unsubscribe = onValue(laporanRef, (snap) => {
+      const data = snap.val();
+      if (!data || typeof data !== "object") {
+        setLaporan([]);
+        return;
+      }
+
+      const arr = Object.entries(data).map(([key, value]: any) => ({
+        id: key,
+        ...value,
+      }));
+
+      arr.sort(
+        (a, b) => new Date(b.waktu).getTime() - new Date(a.waktu).getTime()
+      );
+
+      setLaporan(arr);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 36 }}>
+      <Text style={styles.title}>📢 LaporPak!!</Text>
+      <Text style={styles.subtitle}>Aplikasi Pelaporan Cepat</Text>
+
+      {/* MAIN BUTTON */}
+      <TouchableOpacity
+        style={styles.bigReportButton}
+        onPress={() => router.push("/input-laporan")}
+      >
+        <Text style={styles.bigButtonIcon}>🚨</Text>
+        <Text style={styles.bigButtonText}>Laporkan Kejadian</Text>
+        <Text style={styles.bigButtonSub}>Klik untuk membuat laporan baru</Text>
+      </TouchableOpacity>
+
+      {/* Carousel Preview */}
+      <Text style={styles.sectionTitle}>Preview Laporan</Text>
+      {laporan.length === 0 ? (
+        <Text style={styles.emptyText}>Belum ada laporan</Text>
+      ) : (
+        <FlatList
+          data={laporan}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={cardWidth + cardSpacing}
+          decelerationRate="fast"
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <View
+              style={[
+                styles.cardPreview,
+                { marginRight: index === laporan.length - 1 ? 16 : cardSpacing },
+              ]}
+            >
+              {item.foto ? (
+                <Image source={{ uri: item.foto }} style={styles.cardImage} />
+              ) : (
+                <View style={[styles.cardImage, styles.noImage]}>
+                  <Text style={styles.noImageText}>No Image</Text>
+                </View>
+              )}
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle} numberOfLines={2}>
+                  {item.judul || "Tanpa judul"}
+                </Text>
+                <Text style={styles.cardTime}>
+                  {item.waktu ? new Date(item.waktu).toLocaleString() : "-"}
+                </Text>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(item.status) },
+                  ]}
+                >
+                  <Text style={styles.statusText}>
+                    {String(item.status || "").toUpperCase() || "UNKNOWN"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+        />
+      )}
+
+      {/* Minimap */}
+      <Text style={styles.sectionTitle}>Peta Laporan</Text>
+
+      <View style={styles.miniMapBox}>
+        <WebView
+          source={require("@/assets/html/map.html")}
+          style={{ flex: 1 }}
+          injectedJavaScript={`
+              // force zoom level normal
+              if (typeof map !== "undefined") {
+                map.setZoom(15);
+              }
+          `}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginTop: 30,
+    marginHorizontal: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  subtitle: {
+    fontSize: 15,
+    marginHorizontal: 16,
+    marginBottom: 20,
+    color: "#555",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+
+  bigReportButton: {
+    marginHorizontal: 16,
+    backgroundColor: "#0077B6",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 20,
+    elevation: 4,
+  },
+  bigButtonIcon: {
+    fontSize: 32,
+    color: "white",
+    marginBottom: 4,
+  },
+  bigButtonText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  bigButtonSub: {
+    fontSize: 11,
+    color: "#e0e0e0",
+    marginTop: 2,
+  },
+
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginLeft: 16, marginBottom: 8 },
+
+  emptyText: { textAlign: "center", color: "#555", marginBottom: 12 },
+
+  cardPreview: {
+    width: cardWidth,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 3,
+  },
+  cardImage: { width: "100%", height: 190, resizeMode: "cover" },
+  noImage: { justifyContent: "center", alignItems: "center", backgroundColor: "#fafafa" },
+  noImageText: { color: "#999" },
+  cardInfo: { padding: 12 },
+  cardTitle: { fontSize: 16, fontWeight: "700", marginBottom: 6 },
+  cardTime: { fontSize: 12, color: "#666", marginBottom: 8 },
+  statusBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  statusText: { color: "#fff", fontSize: 11, fontWeight: "700" },
+
+  // ⬇ INI MINIMAP KECIL ⬇
+  miniMapBox: {
+    height: 300,   // kecil tapi zoom normal
+    borderRadius: 12,
+    overflow: "hidden",
+    marginHorizontal: 16,
+    marginTop: 8,
   },
 });

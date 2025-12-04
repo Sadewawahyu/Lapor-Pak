@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Map Visual</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #map { width: 100%; height: 100%; }
+
+    /* Legend naik sedikit agar tidak bertumpuk toggle */
+    .legend {
+      position: fixed;
+      left: 12px;
+      bottom: 70px;
+      background: rgba(255,255,255,0.95);
+      padding: 10px 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      z-index: 9999;
+    }
+
+    .legend .row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .legend .swatch { width:14px; height:14px; border-radius:7px; display:inline-block; }
+    .legend .title { font-weight:700; margin-bottom:6px; font-size:14px; }
+
+    .leaflet-control-zoom a { font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Legend -->
+  <div id="legend" class="legend" aria-hidden="false">
+    <div class="title">Legenda</div>
+    <div class="row"><span class="swatch" style="background:#0077B6"></span> Kriminalitas</div>
+    <div class="row"><span class="swatch" style="background:#E09F00"></span> Kecelakaan</div>
+    <div class="row"><span class="swatch" style="background:#2ECC71"></span> Lainnya</div>
+  </div>
+
+  <script>
+    const map = L.map('map', { zoomControl: true }).setView([-7.7956, 110.3695], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+    window._mapMarkers = [];
+
+    function warnaUntukJenis(j){
+      if (!j) return "#2ECC71";
+      j = j.toLowerCase();
+      if (j === "kriminalitas") return "#0077B6";
+      if (j === "kecelakaan") return "#E09F00";
+      return "#2ECC71";
+    }
+
+    function buatMarker(lat,lng,color,popupHtml){
+      const radius = window.innerWidth < 500 ? 9 : 7;
+      const m = L.circleMarker([lat,lng],{
+        radius, color, weight:1, fillColor:color, fillOpacity:0.95
+      }).addTo(map);
+      if (popupHtml) m.bindPopup(popupHtml);
+      return m;
+    }
+
+    function clearMarkers(){
+      window._mapMarkers.forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
+      window._mapMarkers = [];
+    }
+
+    window.renderMarkers = function(){
+      const data = window.laporanData || [];
+      clearMarkers();
+      if (!Array.isArray(data)) return;
+
+      data.forEach(item=>{
+        const lat = Number(item.latitude);
+        const lng = Number(item.longitude);
+        if (!isFinite(lat) || !isFinite(lng)) return;
+
+        const color = warnaUntukJenis(item.jenis);
+        const popup = `
+          <div style="font-family:Arial;font-size:13px;">
+            <b>${item.judul || "-"}</b><br/>
+            Jenis: ${item.jenis}<br/>
+            Status: ${item.status}<br/>
+            <span style="font-size:11px;color:#666;">
+              ${lat.toFixed(5)}, ${lng.toFixed(5)}
+            </span>
+          </div>
+        `;
+
+        const mk = buatMarker(lat,lng,color,popup);
+        window._mapMarkers.push(mk);
+      });
+
+      try{
+        if (window._mapMarkers.length > 0) {
+          const coords = window._mapMarkers.map(m=>m.getLatLng());
+          const bounds = L.latLngBounds(coords);
+          map.fitBounds(bounds.pad(0.4));
+        }
+      }catch(e){}
+    };
+
+    window.setLegendVisible = function(show){
+      const el = document.getElementById("legend");
+      if (!el) return;
+      el.style.display = show ? "block" : "none";
+    };
+
+    window.setLegendVisible(true);
+  </script>
+</body>
+</html>
