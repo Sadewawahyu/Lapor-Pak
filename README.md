@@ -1,50 +1,40 @@
-# Welcome to your Expo app 👋
+# LaporPak
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Deskripsi Produk
 
-## Get started
+LaporPak adalah aplikasi mobile yang memungkinkan pengguna untuk melaporkan berbagai insiden atau kejadian secara langsung. Aplikasi ini dirancang untuk mempermudah masyarakat dalam menyampaikan laporan kepada pihak yang berwenang, serta memvisualisasikan lokasi laporan pada peta interaktif.
 
-1. Install dependencies
+## Komponen Pembangun Produk
 
-   ```bash
-   npm install
-   ```
+Aplikasi ini dibangun menggunakan teknologi berikut:
 
-2. Start the app
+*   **Framework:** React Native (Expo)
+*   **Bahasa:** TypeScript
+*   **Navigasi:** React Navigation
+*   **Peta:** Leaflet.js (ditampilkan melalui WebView)
+*   **Database:** Firebase Realtime Database
+*   **UI/UX:** Komponen bawaan React Native & komponen kustom.
 
-   ```bash
-   npx expo start
-   ```
+## Sumber Data
 
-In the output, you'll find options to open the app in a
+Sumber data utama untuk aplikasi ini adalah **Firebase Realtime Database**. Semua data laporan yang diinput oleh pengguna, termasuk detail dan koordinat lokasi, disimpan dan diambil dari database ini secara real-time.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Data peta disediakan oleh **OpenStreetMap**.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Tangkapan Layar
 
-## Get a fresh project
+Berikut adalah beberapa tangkapan layar dari komponen penting dalam aplikasi LaporPak.
 
-When you're ready, run:
+*(Anda dapat menambahkan gambar Anda di sini)*
 
-```bash
-npm run reset-project
-```
+**1. Halaman Utama & Jelajah Laporan**
+*Gantilah teks ini dengan tangkapan layar halaman utama aplikasi Anda.*
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+**2. Peta Interaktif Laporan**
+*Gantilah teks ini dengan tangkapan layar halaman peta Anda.*
 
-## Learn more
+**3. Formulir Input Laporan**
+*Gantilah teks ini dengan tangkapan layar formulir input laporan.*
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**4. Halaman Darurat**
+*Gantilah teks ini dengan tangkapan layar halaman darurat.*
